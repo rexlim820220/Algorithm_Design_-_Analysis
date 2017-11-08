@@ -1,5 +1,8 @@
 #include <iostream>
+#include <algorithm>
+#include <queue>
 #include <new>
+
 using namespace std;
 
 struct Pond{
@@ -7,65 +10,75 @@ struct Pond{
     int decrease;
 };
 
-Pond *pond;
+class cmp{
+public:
+    int operator () (const int &lhs,const int &rhs)
+    {
+        return lhs<rhs;
+    }
+};
 
 int main(int argc,char **argv)
 {
-    pond=0;
-    int a;
-    cin>>a;
-    while(a--)
+    int test;
+    cin>>test;
+    while(test--)
     {
-        int n,k,d=0;
+        int n,k;
         cin>>n>>k;
-        pond = new Pond[n+1];
+        Pond *pond=new Pond[n+1];
         for(int i=1;i<=n;i+=1)
         {
             cin>>pond[i].fishing_>>pond[i].decrease;
         }
-        int DP[k][n+1],doc[k][n+1];
-        for(int i=0;i<k;i+=1)
-        {
-            for(int j=0;j<=n;j+=1)
-            {
-                DP[i][j]=(i>=j?0:-1);
-            }
-        }
-        for(int j=1;j<=n;j+=1)
-        {
-            int f=pond[j].fishing_;
-            int d=pond[j].decrease;
-            for(int i=j;i<k;i+=1)
-            {
-                if(j==1){DP[j][i]=DP[j][i-1]+f-(i-j)*d;}
-                else{
-                    int temp=0,c=-1;
-                    for(int m=0;m<=i;m+=1)
-                    {
-                        if(DP[j-1][m]>temp){temp=DP[j-1][m];c=m;}
-                    }
-                    if(c!=i){DP[j][i]=temp+f;}
-                    else{DP[j][i]=temp+f-(i-j)*d;}
-                }
-                cout<<DP[j][i]<<' ';
-            }
-            cout<<endl;
-        }
-        /*print*
+        int DP[n+1][k];
         for(int i=1;i<=n;i+=1)
         {
             int f=pond[i].fishing_;
             int d=pond[i].decrease;
-            for(int j=0;j<i;j+=1){DP[i][j]=0;}
             for(int j=i;j<k;j+=1)
             {
-                //if(DP[i][j]<DP[i][j-1]){break;}
-                //printf("%d ",f-(j-i)*d);
+                DP[i][j]=f-(j-i)*d;
+                if(DP[i][j]<0){DP[i][j]=0;}
                 cout<<DP[i][j]<<' ';
             }
             cout<<endl;
-        }*/
+        }
+        int wait=k;
+        unsigned long long int cost=0;
+        priority_queue<unsigned long long int> greedy;
+        for(int i=1;i<=n;i+=1)
+        {
+            for(int j=i;j<k;j+=1)
+            {
+                if(DP[i][j]>=DP[i+1][i+1])
+                {
+                    greedy.push(DP[i][j]);
+                }
+                else
+                {
+                    if(!greedy.empty()){greedy.pop();}
+                    i+=1;
+                    j=i;
+                    greedy.push(DP[i][j]);
+                }
+            }
+        }
+        int time=k-1;
+        while(!greedy.empty()&&time>0)
+        {
+            cost+=greedy.top();
+            cout<<greedy.top()<<endl;
+            greedy.pop();
+            time-=1;
+        }
+        cout<<cost<<endl;
         delete[]pond;
     }
     return 0;
+}
+
+bool cmp(const int &lhs,const int &rhs)
+{
+    return rhs<lhs;
 }
